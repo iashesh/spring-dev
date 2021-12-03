@@ -6,7 +6,11 @@
 
     <groupId>com.binarray.spring.dev</groupId>
     <artifactId>spring-dev</artifactId>
+    <packaging>pom</packaging>
     <version>1.0</version>
+    <modules>
+        <module>spring-mvc</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>14</maven.compiler.source>
