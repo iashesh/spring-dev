@@ -1,5 +1,8 @@
 package com.binarray.spring.dev.springai.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -13,42 +16,60 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.text.MessageFormat;
 
 /**
+ * Controller class for handling requests related to OpenAI chat completions using Spring REST framework.
+ *
  * @author Ashesh
  */
 @Slf4j
 @RestController
 @RequestMapping("/openairest")
 public class OpenAIRESTController {
-    @Autowired
+    @Setter(onMethod_ = @Autowired)
     private RestTemplate restTemplate;
 
+    /**
+     * Processes POST requests to the "/chat" endpoint.
+     *
+     * @param message the input message to be sent to the OpenAI API
+     * @return the response from the OpenAI API wrapped in a ResponseEntity
+     */
     @PostMapping("/chat")
-    ResponseEntity<?> processRequest(@RequestBody String message) {
+    public ResponseEntity<JsonNode> processRequest(@RequestBody JsonNode message) {
+        // Construct the request payload
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode requestBody = mapper.createObjectNode()
+                .put("model", "gpt-3.5-turbo")
+                .set("messages", mapper.createArrayNode()
+                        .add(mapper.createObjectNode()
+                                .put("role", "user")
+                                .put("content", message.get("message").asText())));
 
-        HttpEntity<String> httpEntity = new HttpEntity<>(message, httpHeaders());
-        ResponseEntity<String> chatCompletionResponse = ResponseEntity.ok(null);
+        // Create HTTP Request
+        HttpEntity<JsonNode> httpEntity = new HttpEntity<>(requestBody, httpHeaders());
+        ResponseEntity<JsonNode> chatCompletionResponse = ResponseEntity.ok(null);
         try {
-            chatCompletionResponse = restTemplate.exchange(URI.create("https://api.openai.com/v1/chat/completions"), HttpMethod.POST, httpEntity, String.class);
-            System.out.println(chatCompletionResponse.getBody());
+            chatCompletionResponse = restTemplate.exchange(
+                    URI.create("https://api.openai.com/v1/chat/completions"),
+                    HttpMethod.POST,
+                    httpEntity,
+                    JsonNode.class);
+            log.info("Response Body: {}", chatCompletionResponse.getBody());
         } catch (Exception e) {
-            System.out.println("Unable to complete request ");
-            e.printStackTrace();
+            log.error("Unable to complete request ", e);
         }
         return chatCompletionResponse;
     }
 
     /**
-     * Set HTTP Headers here
+     * Sets HTTP headers for the request.
      *
-     * @return httpHeaders
+     * @return HttpHeaders object with the required headers set
      */
     private HttpHeaders httpHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
-        headers.set(HttpHeaders.AUTHORIZATION, MessageFormat.format("Bearer {0}", "sk-proj-JEoYj6nuhgpcYyjocJXjT3BlbkFJcL2WZRJfu9aaIRuYTQGD"));
         return headers;
     }
 }
