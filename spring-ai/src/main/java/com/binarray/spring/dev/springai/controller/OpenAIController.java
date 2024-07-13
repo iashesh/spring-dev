@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * Controller class for handling requests related to the OpenAI chat service.
+ * Controller class for handling requests related to the OpenAI chat service using Spring-AI framework.
  *
  * @author Ashesh
  */
