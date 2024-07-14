@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,6 +55,8 @@ public class OpenAIRESTController {
             log.info("Response Body: {}", chatCompletionResponse.getBody());
         } catch (Exception e) {
             log.error("Unable to complete request ", e);
+            JsonNode errorResponse = createErrorResponse("Error processing chat request", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
         return chatCompletionResponse;
     }
@@ -71,5 +70,12 @@ public class OpenAIRESTController {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
         return headers;
+    }
+
+    private JsonNode createErrorResponse(String message, String details) {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.createObjectNode()
+                .put("message", message)
+                .put("details", details);
     }
 }
